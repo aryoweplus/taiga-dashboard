@@ -8,12 +8,14 @@ import {
   Settings,
   Layers,
   RefreshCw,
+  Trophy,
 } from 'lucide-react'
 import { useState } from 'react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/team', label: 'Team', icon: Users },
+  { href: '/scoring',   label: 'Scoring',   icon: Trophy },
   { href: '/settings', label: 'Settings', icon: Settings },
   { href: '/widgets', label: 'Widgets', icon: Layers },
 ]
@@ -43,7 +45,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-4 py-5 border-b border-white/8">
         <div className="text-sm font-medium text-slate-200 tracking-wide">
-          TaigaView WE+
+          TaigaView WE+ [IT]
         </div>
         <div className="text-xs text-white/30 mt-0.5">
           Project Dashboard

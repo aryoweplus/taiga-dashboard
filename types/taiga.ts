@@ -28,11 +28,13 @@ export interface TaigaUserStory {
   milestone: number | null
   milestone_slug: string | null
   milestone_name: string | null
-  is_closed: boolean           // ✅ ini yang utama
+  is_closed: boolean          
   is_blocked: boolean
   total_points: number | null
-  kanban_order: number         // ✅ tambah ini
-  swimlane: number | null      // ✅ tambah ini
+  kanban_order: number         
+  swimlane: number | null      
+  due_date: string | null       
+  finish_date: string | null
 }
 
 export interface TaigaTask {
@@ -103,4 +105,34 @@ export interface MemberSummary {
   blocked: number
   total: number
   pct: number
+}
+export interface StoryScore {
+  storyId: number
+  ref: number
+  subject: string
+  assignedUsers: number[]
+  totalPoints: number
+  dueDate: string | null
+  finishDate: string | null
+  status: string
+  isClosed: boolean
+  score: number | null        // null = belum selesai
+  daysVariance: number | null // + = early, - = late, 0 = on time
+  scoreStatus: 'on_time' | 'early' | 'late' | 'ongoing' | 'no_due_date'
+}
+
+export interface MemberScore {
+  id: number
+  full_name: string
+  username: string
+  role_name: string
+  totalScore: number
+  totalStories: number
+  doneStories: number
+  ongoingStories: number
+  onTimeCount: number
+  earlyCount: number
+  lateCount: number
+  avgVariance: number         // rata-rata hari (+ = cenderung early)
+  stories: StoryScore[]
 }

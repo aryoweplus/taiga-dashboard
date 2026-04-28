@@ -67,3 +67,17 @@ export function useSnapshots() {
   )
   return { snapshots: data || [], error, isLoading }
 }
+
+export function useScoring() {
+  const { data, error, isLoading, mutate } = useSWR(
+    `/api/taiga/scoring?projectId=${PROJECT_ID}`,
+    fetcher,
+    { refreshInterval: 5 * 60 * 1000 }
+  )
+  return {
+    scores: data || [],
+    error,
+    isLoading,
+    mutate
+  }
+}

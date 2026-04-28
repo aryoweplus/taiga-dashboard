@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import { useUserStories, useTasks, useMembers, useTeamConfig } from '@/lib/hooks'
 import { calcMemberSummary } from '@/lib/transformer'
+import MemberDetailModal from '@/components/ui/MemberDetailModal'
 
 const roleStyle: Record<string, string> = {
   DEV: 'bg-blue-50 text-blue-600',
@@ -34,6 +35,10 @@ export default function TeamPage() {
   const qaDone = qaMembers.reduce((sum, m) => sum + m.done, 0)
   const devTotal = devMembers.reduce((sum, m) => sum + m.total, 0)
   const qaTotal = qaMembers.reduce((sum, m) => sum + m.total, 0)
+
+  const [selectedMember, setSelectedMember] = useState<{
+  id: number; full_name: string; username: string; role_name: string
+} | null>(null)
 
   if (isLoading) return <LoadingSpinner text="Loading team data..." />
   if (error) return <ErrorMessage message="Failed to load team data" />
@@ -102,16 +107,22 @@ export default function TeamPage() {
             {memberSummary.map(m => (
               <tr key={m.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                 <td className="py-2.5 pr-4">
-                  <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedMember(m)}
+                    className="flex items-center gap-2 hover:opacity-75 transition-opacity group text-left"
+                  >
                     <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-medium flex-shrink-0">
                       {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-xs text-gray-700">{m.full_name}</p>
+                      <p className="text-xs text-gray-700 group-hover:text-blue-600 transition-colors group-hover:underline underline-offset-2">
+                        {m.full_name}
+                      </p>
                       <p className="text-[11px] text-gray-400">@{m.username}</p>
                     </div>
-                  </div>
+                  </button>
                 </td>
+
                 <td className="py-2.5 pr-4">
                   <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${roleStyle[m.role_name] || roleStyle.DEV}`}>
                     {m.role_name}
@@ -137,6 +148,16 @@ export default function TeamPage() {
           </tbody>
         </table>
       </div>
+      {selectedMember && (
+  <MemberDetailModal
+    memberId={selectedMember.id}
+    memberName={selectedMember.full_name}
+    memberUsername={selectedMember.username}
+    roleLabel={selectedMember.role_name}
+    stories={stories}
+    onClose={() => setSelectedMember(null)}
+  />
+)}
     </div>
   )
 }

@@ -6,7 +6,6 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import StatusChart from '@/components/charts/StatusChart'
 import MemberChart from '@/components/charts/MemberChart'
-import TeamTable from '@/components/charts/TeamTable'
 import DateRangePicker, { DateRange } from '@/components/ui/DateRangePicker'
 import MemberDetailModal from '@/components/ui/MemberDetailModal'
 import { filterStoriesByDateRange } from '@/lib/dateFilter'
@@ -27,8 +26,14 @@ interface SelectedMember {
   role_name: string
 }
 
+const roleStyle: Record<string, string> = {
+  DEV: 'bg-blue-50 text-blue-600',
+  QA:  'bg-emerald-50 text-emerald-600',
+  PM:  'bg-amber-50 text-amber-600',
+}
+
 export default function DashboardPage() {
-  const [showDone, setShowDone] = useState(true) 
+  const [showDone, setShowDone] = useState(true)
   const [dateRange, setDateRange] = useState<DateRange>(DEFAULT_RANGE)
   const [selectedMember, setSelectedMember] = useState<SelectedMember | null>(null)
 
@@ -49,8 +54,8 @@ export default function DashboardPage() {
       if (!dateRange.start || !dateRange.end) return true
       const start = new Date(dateRange.start).setHours(0, 0, 0, 0)
       const end = new Date(dateRange.end).setHours(23, 59, 59, 999)
-      const modified = new Date(t.modified_date).getTime()
-      return modified >= start && modified <= end
+      return new Date(t.modified_date).getTime() >= start &&
+             new Date(t.modified_date).getTime() <= end
     })
     const base = calcMemberSummary(stories, filteredTasks, members)
     return base.map(m => {
@@ -63,20 +68,28 @@ export default function DashboardPage() {
   if (error) return <ErrorMessage message="Failed to load data from Taiga" />
 
   const isFiltered = !!(dateRange.start && dateRange.end)
+  const doneStories = stories
+    .filter(s => s.is_closed)
+    .sort((a, b) => {
+      if (!a.finish_date) return 1
+      if (!b.finish_date) return -1
+      return new Date(b.finish_date).getTime() - new Date(a.finish_date).getTime()
+    })
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-lg font-medium text-gray-800">Dashboard</h1>
+          <h1 className="text-base md:text-lg font-medium text-gray-800">Dashboard</h1>
           <p className="text-xs text-gray-400 mt-0.5">IT Development · Kanban Board</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between sm:justify-end gap-3">
           <div className="flex items-center gap-1.5 text-xs text-gray-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
             {isFiltered
-              ? `${stories.length} dari ${allStories.length} stories`
+              ? `${stories.length} / ${allStories.length}`
               : `${stories.length} stories`
             }
           </div>
@@ -86,26 +99,48 @@ export default function DashboardPage() {
 
       {/* Sprint info bar */}
       {isFiltered && (
-        <div className="mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-blue-600">
-            <span className="font-medium">{dateRange.label}</span>
-            <span className="text-blue-400">{dateRange.start} → {dateRange.end}</span>
-          </div>
-          <div className="text-xs text-blue-400">
-            {Math.ceil(
-              (new Date(dateRange.end).getTime() - new Date(dateRange.start).getTime())
-              / (1000 * 60 * 60 * 24)
-            ) + 1} hari
+        <div className="mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg">
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-blue-600">
+              <span className="font-medium">{dateRange.label}</span>
+              <span className="text-blue-400 text-[11px]">{dateRange.start} → {dateRange.end}</span>
+            </div>
+            <span className="text-[11px] text-blue-400">
+              {Math.ceil(
+                (new Date(dateRange.end).getTime() - new Date(dateRange.start).getTime())
+                / (1000 * 60 * 60 * 24)
+              ) + 1} hari
+            </span>
           </div>
         </div>
       )}
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
-        <MetricCard label="Total Stories" value={summary.total} sub={isFiltered ? dateRange.label : 'semua'} color="blue" />
-        <MetricCard label="Done" value={summary.done} sub={`${summary.completionPct}% completion`} color="teal" />
-        <MetricCard label="In Progress" value={summary.inProgress} sub={`${summary.total > 0 ? Math.round((summary.inProgress / summary.total) * 100) : 0}% of total`} color="amber" />
-        <MetricCard label="Blocked" value={summary.blocked} sub="Needs attention" color="red" />
+      {/* Metric Cards — 2 cols mobile, 4 cols desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        <MetricCard
+          label="Total"
+          value={summary.total}
+          sub={isFiltered ? 'dalam sprint' : 'semua'}
+          color="blue"
+        />
+        <MetricCard
+          label="Done"
+          value={summary.done}
+          sub={`${summary.completionPct}%`}
+          color="teal"
+        />
+        <MetricCard
+          label="In Progress"
+          value={summary.inProgress}
+          sub={`${summary.total > 0 ? Math.round((summary.inProgress / summary.total) * 100) : 0}%`}
+          color="amber"
+        />
+        <MetricCard
+          label="Blocked"
+          value={summary.blocked}
+          sub="Perlu perhatian"
+          color="red"
+        />
       </div>
 
       {/* Progress Bar */}
@@ -127,129 +162,131 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Done Stories List */}
-<div className="bg-white border border-gray-100 rounded-xl p-4 mb-4">
-  <div className="flex items-center justify-between mb-3">
-    <div className="flex items-center gap-2">
-      <p className="text-xs font-medium text-gray-500">Done stories</p>
-      <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-medium">
-        {summary.done}
-      </span>
-    </div>
-    <button
-      onClick={() => setShowDone(prev => !prev)}
-      className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-    >
-      {showDone ? 'Hide' : 'Show all'}
-    </button>
-  </div>
+      {/* Done Stories */}
+      <div className="bg-white border border-gray-100 rounded-xl p-4 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-medium text-gray-500">Done stories</p>
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-medium">
+              {doneStories.length}
+            </span>
+          </div>
+          <button
+            onClick={() => setShowDone(prev => !prev)}
+            className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            {showDone ? 'Hide' : 'Show all'}
+          </button>
+        </div>
 
-  {showDone && (
-    <div className="space-y-1.5">
-      {stories
-        .filter(s => s.is_closed)
-        .sort((a, b) => {
-          // Sort by finish_date terbaru dulu
-          if (!a.finish_date) return 1
-          if (!b.finish_date) return -1
-          return new Date(b.finish_date).getTime() - new Date(a.finish_date).getTime()
-        })
-        .map(s => {
-          const assignedNames = memberSummary
-            .filter(m =>
-              ((s as any).assigned_users?.length
-                ? (s as any).assigned_users
-                : s.assigned_to ? [s.assigned_to] : []
-              ).includes(m.id)
-            )
-            .map(m => m.full_name.split(' ')[0])
+        {showDone && (
+          <div className="space-y-1.5">
+            {doneStories.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-4">
+                Belum ada story yang done dalam range ini
+              </p>
+            ) : (
+              doneStories.map(s => {
+                const assignedNames = memberSummary
+                  .filter(m =>
+                    ((s as any).assigned_users?.length
+                      ? (s as any).assigned_users
+                      : s.assigned_to ? [s.assigned_to] : []
+                    ).includes(m.id)
+                  )
+                  .map(m => m.full_name.split(' ')[0])
 
-          return (
-            <div
-              key={s.id}
-              className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 transition-all group"
-            >
-              <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                {/* Done checkmark */}
-                <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                    <path d="M1 4L3 6L7 2" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                {/* Ref + Subject */}
-                <span className="text-[11px] text-gray-400 flex-shrink-0">#{s.ref}</span>
-                <span className="text-xs text-gray-600 truncate">{s.subject}</span>
-              </div>
+                return (
+                  <div
+                    key={s.id}
+                    className="flex flex-col gap-1.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-all
+                      sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    {/* Left — ref + subject */}
+                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                      <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                          <path d="M1 4L3 6L7 2" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] text-gray-400 flex-shrink-0">#{s.ref}</span>
+                          <span className="text-xs text-gray-600 truncate">{s.subject}</span>
+                        </div>
+                        {/* Mobile: meta info di bawah subject */}
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 sm:hidden">
+                          {assignedNames.slice(0, 2).map((name, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-500 rounded font-medium">
+                              {name}
+                            </span>
+                          ))}
+                          {s.finish_date && (
+                            <span className="text-[10px] text-gray-400">
+                              {new Date(s.finish_date).toLocaleDateString('id-ID', {
+                                day: 'numeric', month: 'short'
+                              })}
+                            </span>
+                          )}
+                          {s.total_points !== null && (
+                            <span className="text-[10px] text-gray-400">{s.total_points} pts</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
 
-              <div className="flex items-center gap-3 ml-3 flex-shrink-0">
-                {/* Assigned members */}
-                {assignedNames.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {assignedNames.slice(0, 2).map((name, i) => (
-                      <span key={i} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-500 rounded font-medium">
-                        {name}
+                    {/* Right — desktop only */}
+                    <div className="hidden sm:flex items-center gap-3 ml-3 flex-shrink-0">
+                      {assignedNames.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          {assignedNames.slice(0, 2).map((name, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-500 rounded font-medium">
+                              {name}
+                            </span>
+                          ))}
+                          {assignedNames.length > 2 && (
+                            <span className="text-[10px] text-gray-400">+{assignedNames.length - 2}</span>
+                          )}
+                        </div>
+                      )}
+                      {s.total_points !== null && (
+                        <span className="text-[10px] text-gray-400">{s.total_points} pts</span>
+                      )}
+                      {s.finish_date && (
+                        <span className="text-[10px] text-gray-400">
+                          {new Date(s.finish_date).toLocaleDateString('id-ID', {
+                            day: 'numeric', month: 'short'
+                          })}
+                        </span>
+                      )}
+                      <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 text-emerald-600">
+                        {s.status_extra_info?.name}
                       </span>
-                    ))}
-                    {assignedNames.length > 2 && (
-                      <span className="text-[10px] text-gray-400">+{assignedNames.length - 2}</span>
-                    )}
+                    </div>
                   </div>
-                )}
+                )
+              })
+            )}
+          </div>
+        )}
 
-                {/* Points */}
-                {s.total_points !== null && (
-                  <span className="text-[10px] text-gray-400">{s.total_points} pts</span>
-                )}
+        {/* Collapsed preview */}
+        {!showDone && doneStories.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {doneStories.slice(0, 3).map(s => (
+              <span key={s.id} className="text-[11px] text-gray-400 truncate max-w-[120px]">
+                #{s.ref} {s.subject.split(']').pop()?.trim() || s.subject}
+              </span>
+            ))}
+            {doneStories.length > 3 && (
+              <span className="text-[11px] text-gray-400">+{doneStories.length - 3} more</span>
+            )}
+          </div>
+        )}
+      </div>
 
-                {/* Finish date */}
-                {s.finish_date && (
-                  <span className="text-[10px] text-gray-400">
-                    {new Date(s.finish_date).toLocaleDateString('id-ID', {
-                      day: 'numeric', month: 'short'
-                    })}
-                  </span>
-                )}
-
-                {/* Status badge */}
-                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 text-emerald-600">
-                  {s.status_extra_info?.name}
-                </span>
-              </div>
-            </div>
-          )
-        })}
-
-      {stories.filter(s => s.is_closed).length === 0 && (
-        <p className="text-xs text-gray-400 text-center py-4">
-          Belum ada story yang done dalam range ini
-        </p>
-      )}
-    </div>
-  )}
-
-  {/* Collapsed preview — tampil saat hidden */}
-  {!showDone && stories.filter(s => s.is_closed).length > 0 && (
-    <div className="flex items-center gap-2">
-      {stories
-        .filter(s => s.is_closed)
-        .slice(0, 3)
-        .map(s => (
-          <span key={s.id} className="text-[11px] text-gray-400 truncate max-w-32">
-            #{s.ref} {s.subject.split(']').pop()?.trim() || s.subject}
-          </span>
-        ))
-      }
-      {stories.filter(s => s.is_closed).length > 3 && (
-        <span className="text-[11px] text-gray-400">
-          +{stories.filter(s => s.is_closed).length - 3} more
-        </span>
-      )}
-    </div>
-  )}
-</div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      {/* Charts — 1 col mobile, 2 col desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="bg-white border border-gray-100 rounded-xl p-4">
           <p className="text-xs font-medium text-gray-500 mb-3">Status breakdown</p>
           <StatusChart summary={summary} />
@@ -260,16 +297,53 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Team Table — dengan clickable member */}
+      {/* Team summary */}
       <div className="bg-white border border-gray-100 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-medium text-gray-500">Team summary</p>
-          <p className="text-[11px] text-gray-400">Klik nama untuk lihat detail</p>
+          <p className="text-[11px] text-gray-400 hidden sm:block">Klik nama untuk lihat detail</p>
         </div>
-        <TeamTableClickable
-          members={memberSummary}
-          onMemberClick={setSelectedMember}
-        />
+
+        {/* Desktop — table */}
+        <div className="hidden md:block">
+          <TeamTableDesktop members={memberSummary} onMemberClick={setSelectedMember} />
+        </div>
+
+        {/* Mobile — card list */}
+        <div className="md:hidden space-y-2">
+          {memberSummary.map(m => (
+            <button
+              key={m.id}
+              onClick={() => setSelectedMember(m)}
+              className="w-full text-left bg-gray-50 hover:bg-gray-100 rounded-xl p-3 transition-all"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-medium flex-shrink-0">
+                    {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-700">{m.full_name}</p>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${roleStyle[m.role_name] || roleStyle.DEV}`}>
+                      {m.role_name}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-xs text-gray-500">{m.pct}%</span>
+              </div>
+              {/* Progress bar */}
+              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden mb-2">
+                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${m.pct}%` }} />
+              </div>
+              {/* Stats row */}
+              <div className="flex items-center gap-3 text-[11px]">
+                <span className="text-emerald-600 font-medium">{m.done} done</span>
+                <span className="text-amber-500">{m.inProgress} in progress</span>
+                {m.blocked > 0 && <span className="text-red-500">{m.blocked} blocked</span>}
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Member Detail Modal */}
@@ -277,7 +351,7 @@ export default function DashboardPage() {
         <MemberDetailModal
           memberId={selectedMember.id}
           memberName={selectedMember.full_name}
-          memberRolename={selectedMember.username}
+          memberRolename={selectedMember.role_name}
           roleLabel={selectedMember.role_name}
           stories={allStories}
           onClose={() => setSelectedMember(null)}
@@ -287,20 +361,13 @@ export default function DashboardPage() {
   )
 }
 
-// ─── Clickable version of TeamTable ──────────────────────────
-function TeamTableClickable({
+function TeamTableDesktop({
   members,
   onMemberClick,
 }: {
   members: MemberSummary[]
   onMemberClick: (m: SelectedMember) => void
 }) {
-  const roleStyle: Record<string, string> = {
-    DEV: 'bg-blue-50 text-blue-600',
-    QA:  'bg-emerald-50 text-emerald-600',
-    PM:  'bg-amber-50 text-amber-600',
-  }
-
   if (members.length === 0) {
     return <p className="text-sm text-gray-400 py-6 text-center">No member data</p>
   }

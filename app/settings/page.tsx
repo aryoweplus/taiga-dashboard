@@ -26,8 +26,8 @@ const ROLES = ['DEV', 'QA', 'PM']
 
 const roleStyle: Record<string, string> = {
   DEV: 'bg-blue-50 text-blue-600 border-blue-200',
-  QA: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-  PM: 'bg-amber-50 text-amber-600 border-amber-200',
+  QA:  'bg-emerald-50 text-emerald-600 border-emerald-200',
+  PM:  'bg-amber-50 text-amber-600 border-amber-200',
 }
 
 export default function SettingsPage() {
@@ -40,25 +40,18 @@ export default function SettingsPage() {
 
   const PROJECT_ID = '2'
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   async function loadData() {
     setLoading(true)
     try {
-      // Ambil members dari Taiga
       const [taigaRes, configRes] = await Promise.all([
         fetch(`/api/taiga/members?projectId=${PROJECT_ID}`),
         fetch(`/api/config/team?projectId=${PROJECT_ID}`),
       ])
-
       const taigaMembers: TaigaMemberRaw[] = await taigaRes.json()
       const savedConfig: TeamMember[] = await configRes.json()
-
       setMembers(taigaMembers)
-
-      // Merge saved roles ke state
       const roleMap: Record<number, string> = {}
       taigaMembers.forEach(m => {
         const saved = savedConfig.find(c => c.taigaUserId === m.user)
@@ -133,21 +126,24 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-4 md:p-6 max-w-3xl">
+
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-lg font-medium text-gray-800">Settings</h1>
+      <div className="mb-5">
+        <h1 className="text-base md:text-lg font-medium text-gray-800">Settings</h1>
         <p className="text-xs text-gray-400 mt-0.5">
           Manage Taiga connection and team role mapping
         </p>
       </div>
 
       {/* Connection Card */}
-      <div className="bg-white border border-gray-100 rounded-xl p-5 mb-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 md:p-5 mb-4">
         <h2 className="text-sm font-medium text-gray-700 mb-4 pb-3 border-b border-gray-100">
           Taiga connection
         </h2>
-        <div className="grid grid-cols-2 gap-4 mb-4">
+
+        {/* 1 col mobile, 2 col desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           <div>
             <label className="block text-xs text-gray-500 mb-1.5">Base URL</label>
             <input
@@ -185,7 +181,9 @@ export default function SettingsPage() {
             />
           </div>
         </div>
-        <div className="flex items-center gap-3">
+
+        {/* Test connection */}
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={testConnection}
             disabled={testStatus === 'testing'}
@@ -196,33 +194,34 @@ export default function SettingsPage() {
           </button>
           {testStatus === 'ok' && (
             <span className="flex items-center gap-1 text-xs text-emerald-600">
-              <CheckCircle size={12} /> Connected successfully
+              <CheckCircle size={12} /> Connected
             </span>
           )}
           {testStatus === 'error' && (
             <span className="flex items-center gap-1 text-xs text-red-500">
-              <XCircle size={12} /> Connection failed
+              <XCircle size={12} /> Failed
             </span>
           )}
         </div>
         <p className="text-[11px] text-gray-400 mt-3">
-          To change credentials, update your <code className="bg-gray-100 px-1 rounded">.env</code> file and restart the server.
+          To change credentials, update your{' '}
+          <code className="bg-gray-100 px-1 rounded">.env</code> file and restart.
         </p>
       </div>
 
       {/* Team Role Mapping */}
-      <div className="bg-white border border-gray-100 rounded-xl p-5">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 md:p-5">
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
           <div>
             <h2 className="text-sm font-medium text-gray-700">Team role mapping</h2>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-400 mt-0.5 hidden sm:block">
               Assign QA / DEV / PM roles to each member
             </p>
           </div>
           <button
             onClick={saveAllRoles}
             disabled={saving === -1 || loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 transition-all flex-shrink-0"
           >
             <Save size={11} />
             {saving === -1 ? 'Saving...' : 'Save all'}
@@ -237,52 +236,126 @@ export default function SettingsPage() {
         ) : (
           <div className="divide-y divide-gray-50">
             {members.map(m => (
-              <div key={m.user} className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[11px] font-medium flex-shrink-0">
-                    {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+              <div key={m.user} className="py-3">
+
+                {/* Mobile layout — stacked */}
+                <div className="flex items-center justify-between gap-2">
+                  {/* Avatar + name */}
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0"
+                      style={{
+                        backgroundColor: m.color ? `${m.color}22` : '#dbeafe',
+                        color: m.color || '#1d4ed8',
+                      }}
+                    >
+                      {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-gray-700 truncate">{m.full_name}</p>
+                      <p className="text-[11px] text-gray-400">{m.role_name}</p>
+                    </div>
                   </div>
-                  <div>
-<p className="text-xs font-medium text-gray-700">{m.full_name}</p>
-<p className="text-[11px] text-gray-400">{m.role_name}</p>
+
+                  {/* Role buttons + save — desktop: inline */}
+                  <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+                    <RoleButtons
+                      userId={m.user}
+                      savedRoles={savedRoles}
+                      onSelect={role => setSavedRoles(prev => ({ ...prev, [m.user]: role }))}
+                    />
+                    <SaveButton
+                      userId={m.user}
+                      saving={saving}
+                      savedIds={savedIds}
+                      onSave={() => saveRole(m)}
+                    />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {/* Role selector */}
-                  <div className="flex gap-1">
-                    {ROLES.map(role => (
-                      <button
-                        key={role}
-                        onClick={() => setSavedRoles(prev => ({ ...prev, [m.user]: role }))}
-                        className={`text-[11px] px-2.5 py-1 rounded-md border font-medium transition-all
-                          ${savedRoles[m.user] === role
-                            ? roleStyle[role]
-                            : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
-                          }`}
-                      >
-                        {role}
-                      </button>
-                    ))}
-                  </div>
-                  {/* Save individual */}
-                  <button
-                    onClick={() => saveRole(m)}
-                    disabled={saving === m.user}
-                    className="p-1.5 rounded-lg hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-all disabled:opacity-50"
-                  >
-                    {savedIds.includes(m.user)
-                      ? <CheckCircle size={14} className="text-emerald-500" />
-                      : saving === m.user
-                        ? <RefreshCw size={14} className="animate-spin" />
-                        : <Save size={14} />
-                    }
-                  </button>
+
+                {/* Mobile: role buttons below name */}
+                <div className="flex sm:hidden items-center justify-between mt-2.5 pl-10">
+                  <RoleButtons
+                    userId={m.user}
+                    savedRoles={savedRoles}
+                    onSelect={role => setSavedRoles(prev => ({ ...prev, [m.user]: role }))}
+                  />
+                  <SaveButton
+                    userId={m.user}
+                    saving={saving}
+                    savedIds={savedIds}
+                    onSave={() => saveRole(m)}
+                  />
                 </div>
+
               </div>
             ))}
           </div>
         )}
       </div>
     </div>
+  )
+}
+
+// ─── Sub-components ───────────────────────────────────────────
+
+function RoleButtons({
+  userId,
+  savedRoles,
+  onSelect,
+}: {
+  userId: number
+  savedRoles: Record<number, string>
+  onSelect: (role: string) => void
+}) {
+  const roleStyle: Record<string, string> = {
+    DEV: 'bg-blue-50 text-blue-600 border-blue-200',
+    QA:  'bg-emerald-50 text-emerald-600 border-emerald-200',
+    PM:  'bg-amber-50 text-amber-600 border-amber-200',
+  }
+
+  return (
+    <div className="flex gap-1">
+      {ROLES.map(role => (
+        <button
+          key={role}
+          onClick={() => onSelect(role)}
+          className={`text-[11px] px-2.5 py-1 rounded-md border font-medium transition-all
+            ${savedRoles[userId] === role
+              ? roleStyle[role]
+              : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
+            }`}
+        >
+          {role}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function SaveButton({
+  userId,
+  saving,
+  savedIds,
+  onSave,
+}: {
+  userId: number
+  saving: number | null
+  savedIds: number[]
+  onSave: () => void
+}) {
+  return (
+    <button
+      onClick={onSave}
+      disabled={saving === userId}
+      className="p-1.5 rounded-lg hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-all disabled:opacity-50"
+    >
+      {savedIds.includes(userId)
+        ? <CheckCircle size={14} className="text-emerald-500" />
+        : saving === userId
+          ? <RefreshCw size={14} className="animate-spin" />
+          : <Save size={14} />
+      }
+    </button>
   )
 }

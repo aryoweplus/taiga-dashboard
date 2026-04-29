@@ -47,7 +47,7 @@ const CHART_TYPES: Record<string, string[]> = {
   status_chart: ['donut', 'pie', 'bar'],
   member_chart: ['bar', 'horizontalBar'],
   qa_dev_chart: ['bar', 'pie'],
-  trend_chart: ['line', 'bar', 'area'],
+  trend_chart:  ['line', 'bar', 'area'],
 }
 
 export default function WidgetsPage() {
@@ -62,17 +62,13 @@ export default function WidgetsPage() {
 
   function toggleVisible(widgetKey: string) {
     setWidgets(prev =>
-      prev.map(w =>
-        w.widgetKey === widgetKey ? { ...w, visible: !w.visible } : w
-      )
+      prev.map(w => w.widgetKey === widgetKey ? { ...w, visible: !w.visible } : w)
     )
   }
 
   function setChartType(widgetKey: string, chartType: string) {
     setWidgets(prev =>
-      prev.map(w =>
-        w.widgetKey === widgetKey ? { ...w, chartType } : w
-      )
+      prev.map(w => w.widgetKey === widgetKey ? { ...w, chartType } : w)
     )
   }
 
@@ -103,29 +99,32 @@ export default function WidgetsPage() {
     }
   }
 
+  const visibleCount = widgets.filter(w => w.visible).length
+
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-4 md:p-6 max-w-3xl">
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-lg font-medium text-gray-800">Widgets</h1>
+          <h1 className="text-base md:text-lg font-medium text-gray-800">Widgets</h1>
           <p className="text-xs text-gray-400 mt-0.5">
-            Show or hide dashboard sections and set chart types
+            {visibleCount} of {widgets.length} widgets visible
           </p>
         </div>
         <button
           onClick={saveAll}
           disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-2 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 transition-all"
+          className="flex items-center gap-1.5 px-3 md:px-4 py-2 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 transition-all flex-shrink-0"
         >
           <Save size={11} />
-          {saved ? 'Saved!' : saving ? 'Saving...' : 'Save changes'}
+          <span>{saved ? 'Saved!' : saving ? 'Saving...' : 'Save'}</span>
         </button>
       </div>
 
-      {/* Widget visibility */}
-      <div className="bg-white border border-gray-100 rounded-xl p-5 mb-4">
-        <h2 className="text-sm font-medium text-gray-700 mb-4 pb-3 border-b border-gray-100">
+      {/* Visibility */}
+      <div className="bg-white border border-gray-100 rounded-xl p-4 md:p-5 mb-4">
+        <h2 className="text-sm font-medium text-gray-700 mb-3 pb-3 border-b border-gray-100">
           Visibility
         </h2>
         <div className="divide-y divide-gray-50">
@@ -133,24 +132,27 @@ export default function WidgetsPage() {
             const meta = WIDGET_LABELS[w.widgetKey]
             if (!meta) return null
             return (
-              <div key={w.widgetKey} className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center
-                    ${w.visible ? 'bg-blue-50 text-blue-500' : 'bg-gray-100 text-gray-400'}`}
-                  >
-                    {w.visible ? <Eye size={14} /> : <EyeOff size={14} />}
-                  </div>
-                  <div>
-                    <p className={`text-xs font-medium ${w.visible ? 'text-gray-700' : 'text-gray-400'}`}>
-                      {meta.label}
-                    </p>
-                    <p className="text-[11px] text-gray-400">{meta.desc}</p>
-                  </div>
+              <div key={w.widgetKey} className="flex items-center gap-3 py-3">
+                {/* Icon */}
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                  ${w.visible ? 'bg-blue-50 text-blue-500' : 'bg-gray-100 text-gray-400'}`}
+                >
+                  {w.visible ? <Eye size={14} /> : <EyeOff size={14} />}
                 </div>
-                {/* Toggle switch */}
+
+                {/* Label + desc */}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-xs font-medium ${w.visible ? 'text-gray-700' : 'text-gray-400'}`}>
+                    {meta.label}
+                  </p>
+                  <p className="text-[11px] text-gray-400 truncate">{meta.desc}</p>
+                </div>
+
+                {/* Toggle */}
                 <button
                   onClick={() => toggleVisible(w.widgetKey)}
-                  className={`relative w-9 h-5 rounded-full transition-all duration-200
+                  aria-label={`${w.visible ? 'Hide' : 'Show'} ${meta.label}`}
+                  className={`relative w-9 h-5 rounded-full transition-all duration-200 flex-shrink-0
                     ${w.visible ? 'bg-blue-500' : 'bg-gray-200'}`}
                 >
                   <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-200
@@ -164,8 +166,8 @@ export default function WidgetsPage() {
       </div>
 
       {/* Chart type preferences */}
-      <div className="bg-white border border-gray-100 rounded-xl p-5">
-        <h2 className="text-sm font-medium text-gray-700 mb-4 pb-3 border-b border-gray-100">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 md:p-5">
+        <h2 className="text-sm font-medium text-gray-700 mb-3 pb-3 border-b border-gray-100">
           Chart type preferences
         </h2>
         <div className="divide-y divide-gray-50">
@@ -175,14 +177,16 @@ export default function WidgetsPage() {
               const meta = WIDGET_LABELS[w.widgetKey]
               const types = CHART_TYPES[w.widgetKey]
               return (
-                <div key={w.widgetKey} className="flex items-center justify-between py-3">
-                  <p className="text-xs text-gray-600">{meta?.label}</p>
-                  <div className="flex gap-1">
+                <div key={w.widgetKey} className="py-3">
+                  {/* Label */}
+                  <p className="text-xs text-gray-600 mb-2">{meta?.label}</p>
+                  {/* Type buttons — wrap on mobile */}
+                  <div className="flex flex-wrap gap-1.5">
                     {types.map(type => (
                       <button
                         key={type}
                         onClick={() => setChartType(w.widgetKey, type)}
-                        className={`text-[11px] px-2.5 py-1 rounded-md border transition-all
+                        className={`text-[11px] px-2.5 py-1.5 rounded-md border transition-all
                           ${w.chartType === type
                             ? 'bg-blue-50 text-blue-600 border-blue-200'
                             : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
@@ -197,6 +201,23 @@ export default function WidgetsPage() {
             })}
         </div>
       </div>
+
+      {/* Floating save bar — mobile only, muncul saat ada perubahan */}
+      <div className="fixed bottom-4 left-4 right-4 md:hidden">
+        <button
+          onClick={saveAll}
+          disabled={saving}
+          className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium
+            bg-blue-600 text-white rounded-xl shadow-lg hover:bg-blue-500
+            disabled:opacity-50 transition-all"
+        >
+          <Save size={14} />
+          {saved ? 'Saved!' : saving ? 'Saving...' : 'Save changes'}
+        </button>
+      </div>
+
+      {/* Bottom padding supaya konten tidak ketutup floating bar di mobile */}
+      <div className="h-20 md:hidden" />
     </div>
   )
 }

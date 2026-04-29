@@ -11,8 +11,8 @@ import DateRangePicker, { DateRange } from '@/components/ui/DateRangePicker'
 
 const roleStyle: Record<string, string> = {
   DEV: 'bg-blue-50 text-blue-600',
-  QA: 'bg-emerald-50 text-emerald-600',
-  PM: 'bg-amber-50 text-amber-600',
+  QA:  'bg-emerald-50 text-emerald-600',
+  PM:  'bg-amber-50 text-amber-600',
 }
 
 const scoreStatusConfig = {
@@ -59,7 +59,7 @@ function VarianceBadge({ variance, status }: { variance: number | null; status: 
   if (status === 'ongoing') {
     return (
       <span className={`text-[11px] ${variance > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-        {variance > 0 ? `${variance}d remaining` : `${Math.abs(variance)}d overdue`}
+        {variance > 0 ? `${variance}d left` : `${Math.abs(variance)}d over`}
       </span>
     )
   }
@@ -68,7 +68,7 @@ function VarianceBadge({ variance, status }: { variance: number | null; status: 
       variance > 0 ? 'text-emerald-600' :
       variance < 0 ? 'text-red-500' : 'text-gray-500'
     }`}>
-      {variance > 0 ? `+${variance}d early` : variance < 0 ? `${variance}d late` : 'On time'}
+      {variance > 0 ? `+${variance}d` : variance < 0 ? `${variance}d` : 'On time'}
     </span>
   )
 }
@@ -81,26 +81,39 @@ function MemberCard({ member }: { member: MemberScore }) {
 
   return (
     <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+      {/* Header row */}
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50/50 transition-all"
+        className="flex items-center justify-between p-3 md:p-4 cursor-pointer hover:bg-gray-50/50 transition-all"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium flex-shrink-0">
+        {/* Left — avatar + name */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium flex-shrink-0">
             {member.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-gray-700">{member.full_name}</p>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${roleStyle[member.role_name] || roleStyle.DEV}`}>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="text-sm font-medium text-gray-700 truncate">{member.full_name}</p>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${roleStyle[member.role_name] || roleStyle.DEV}`}>
                 {member.role_name}
               </span>
             </div>
-            <p className="text-[11px] text-gray-400 mt-0.5">@{member.username}</p>
+            {/* Mobile — score + avg variance inline */}
+            <div className="flex items-center gap-2 mt-0.5 md:hidden">
+              <span className="text-sm font-semibold text-gray-800">{member.totalScore} pts</span>
+              <span className={`text-[11px] font-medium ${
+                member.avgVariance > 0 ? 'text-emerald-600' :
+                member.avgVariance < 0 ? 'text-red-500' : 'text-gray-400'
+              }`}>
+                {member.avgVariance > 0 ? `+${member.avgVariance}d avg` :
+                 member.avgVariance < 0 ? `${member.avgVariance}d avg` : '0d avg'}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        {/* Right — stats (desktop only) */}
+        <div className="hidden md:flex items-center gap-6">
           <div className="flex gap-4 text-center">
             <div>
               <p className="text-lg font-semibold text-gray-800">{member.totalScore}</p>
@@ -123,7 +136,6 @@ function MemberCard({ member }: { member: MemberScore }) {
               <p className="text-[10px] text-gray-400">On going</p>
             </div>
           </div>
-
           <div className="text-center min-w-16">
             <p className={`text-sm font-medium ${
               member.avgVariance > 0 ? 'text-emerald-600' :
@@ -134,34 +146,62 @@ function MemberCard({ member }: { member: MemberScore }) {
             </p>
             <p className="text-[10px] text-gray-400">Avg variance</p>
           </div>
+        </div>
 
+        {/* Chevron */}
+        <div className="ml-2 flex-shrink-0">
           {expanded
-            ? <ChevronDown size={16} className="text-gray-400" />
-            : <ChevronRight size={16} className="text-gray-400" />
+            ? <ChevronDown size={15} className="text-gray-400" />
+            : <ChevronRight size={15} className="text-gray-400" />
           }
         </div>
       </div>
 
+      {/* Mobile stats bar */}
+      <div className="md:hidden grid grid-cols-4 divide-x divide-gray-100 border-t border-gray-100">
+        <div className="px-2 py-2 text-center">
+          <p className="text-xs font-medium text-emerald-600">{member.earlyCount}</p>
+          <p className="text-[10px] text-gray-400">Early</p>
+        </div>
+        <div className="px-2 py-2 text-center">
+          <p className="text-xs font-medium text-blue-500">{member.onTimeCount}</p>
+          <p className="text-[10px] text-gray-400">On time</p>
+        </div>
+        <div className="px-2 py-2 text-center">
+          <p className="text-xs font-medium text-red-500">{member.lateCount}</p>
+          <p className="text-[10px] text-gray-400">Late</p>
+        </div>
+        <div className="px-2 py-2 text-center">
+          <p className="text-xs font-medium text-amber-500">{member.ongoingStories}</p>
+          <p className="text-[10px] text-gray-400">On going</p>
+        </div>
+      </div>
+
+      {/* Expanded stories */}
       {expanded && (
         <div className="border-t border-gray-100">
+          {/* Ongoing */}
           {ongoingStories.length > 0 && (
-            <div className="px-4 py-3 bg-amber-50/30">
+            <div className="px-3 md:px-4 py-3 bg-amber-50/30">
               <p className="text-[11px] font-medium text-amber-600 mb-2 uppercase tracking-wider">
                 Currently working on ({ongoingStories.length})
               </p>
               <div className="space-y-2">
                 {ongoingStories.map(s => (
-                  <div key={s.storyId} className="flex items-center justify-between text-xs">
+                  <div key={s.storyId} className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between text-xs">
+                    {/* Subject */}
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <span className="text-gray-400 flex-shrink-0">#{s.ref}</span>
                       <span className="text-gray-600 truncate">{s.subject}</span>
                     </div>
-                    <div className="flex items-center gap-3 ml-3 flex-shrink-0">
+                    {/* Meta */}
+                    <div className="flex items-center gap-2 ml-5 md:ml-3 flex-shrink-0">
                       <span className="text-gray-400">{s.totalPoints} pts</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium
-                        ${s.status === 'In Progress' ? 'bg-blue-50 text-blue-600' :
-                          s.status === 'Ready For Test' ? 'bg-purple-50 text-purple-600' :
-                          s.status === 'Testing' ? 'bg-indigo-50 text-indigo-600' :
+                        ${s.status === 'In Progress'      ? 'bg-blue-50 text-blue-600' :
+                          s.status === 'Ready For Test'   ? 'bg-purple-50 text-purple-600' :
+                          s.status === 'Testing'          ? 'bg-indigo-50 text-indigo-600' :
+                          s.status === 'Ready to Release' ? 'bg-cyan-50 text-cyan-600' :
                           'bg-gray-100 text-gray-500'}`}
                       >
                         {s.status}
@@ -174,20 +214,23 @@ function MemberCard({ member }: { member: MemberScore }) {
             </div>
           )}
 
+          {/* Done */}
           {doneStories.length > 0 && (
-            <div className="px-4 py-3">
+            <div className="px-3 md:px-4 py-3">
               <p className="text-[11px] font-medium text-gray-400 mb-2 uppercase tracking-wider">
                 Completed ({doneStories.length})
               </p>
               <div className="space-y-2">
                 {doneStories.map(s => (
-                  <div key={s.storyId} className="flex items-center justify-between text-xs">
+                  <div key={s.storyId} className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between text-xs">
+                    {/* Subject */}
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <span className="text-gray-400 flex-shrink-0">#{s.ref}</span>
                       <span className="text-gray-500 truncate">{s.subject}</span>
                     </div>
-                    <div className="flex items-center gap-3 ml-3 flex-shrink-0">
-                      <span className="text-gray-400">{s.totalPoints} pts base</span>
+                    {/* Meta */}
+                    <div className="flex items-center gap-2 ml-5 md:ml-3 flex-shrink-0">
+                      <span className="text-gray-400 hidden sm:inline">{s.totalPoints} pts</span>
                       <VarianceBadge variance={s.daysVariance} status={s.scoreStatus} />
                       <ScoreBadge score={s.score} status={s.scoreStatus} />
                     </div>
@@ -260,26 +303,35 @@ export default function ScoringPage() {
 
   const topScorer = filtered[0] as MemberScore | undefined
   const totalScore = filtered.reduce((sum: number, m: MemberScore) => sum + m.totalScore, 0)
+  const onTimeRate = filtered.length > 0
+    ? Math.round(
+        (filtered.reduce((sum: number, m: MemberScore) => sum + m.onTimeCount + m.earlyCount, 0) /
+        Math.max(filtered.reduce((sum: number, m: MemberScore) => sum + m.doneStories, 0), 1)) * 100
+      )
+    : 0
 
   if (isLoading) return <LoadingSpinner text="Calculating scores..." />
   if (error) return <ErrorMessage message="Failed to load scoring data" />
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-lg font-medium text-gray-800">Scoring</h1>
+          <h1 className="text-base md:text-lg font-medium text-gray-800">Scoring</h1>
           <p className="text-xs text-gray-400 mt-0.5">
-            Based on mandays · on time = base pts · early/late = ±1 per day
+            on time = base pts · early/late = ±1 per day
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        {/* Controls */}
+        <div className="flex items-center justify-between sm:justify-end gap-2">
           <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
             {(['all', 'DEV', 'QA'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1 text-xs rounded-md font-medium transition-all
+                className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all
                   ${filter === f
                     ? 'bg-white text-gray-700 shadow-sm'
                     : 'text-gray-400 hover:text-gray-600'
@@ -293,49 +345,46 @@ export default function ScoringPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        <div className="bg-gray-100 rounded-xl p-4">
+      {/* Summary cards — 2 cols mobile, 4 cols desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        <div className="bg-gray-100 rounded-xl p-3 md:p-4">
           <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1">Team total</p>
-          <p className="text-2xl font-medium text-gray-700">{totalScore} pts</p>
+          <p className="text-xl md:text-2xl font-medium text-gray-700">{totalScore} pts</p>
           <p className="text-[11px] text-gray-400 mt-1">{filtered.length} members</p>
         </div>
-        <div className="bg-emerald-50 rounded-xl p-4">
+        <div className="bg-emerald-50 rounded-xl p-3 md:p-4">
           <p className="text-[11px] text-emerald-500 uppercase tracking-wider mb-1">Top scorer</p>
-          <p className="text-lg font-medium text-emerald-700 truncate">
+          <p className="text-base md:text-lg font-medium text-emerald-700 truncate">
             {topScorer?.full_name.split(' ')[0] ?? '—'}
           </p>
           <p className="text-[11px] text-emerald-400 mt-1">{topScorer?.totalScore ?? 0} pts</p>
         </div>
-        <div className="bg-blue-50 rounded-xl p-4">
+        <div className="bg-blue-50 rounded-xl p-3 md:p-4">
           <p className="text-[11px] text-blue-500 uppercase tracking-wider mb-1">On time rate</p>
-          <p className="text-2xl font-medium text-blue-700">
-            {filtered.length > 0
-              ? Math.round(
-                  (filtered.reduce((sum: number, m: MemberScore) => sum + m.onTimeCount + m.earlyCount, 0) /
-                  Math.max(filtered.reduce((sum: number, m: MemberScore) => sum + m.doneStories, 0), 1)) * 100
-                )
-              : 0}%
-          </p>
+          <p className="text-xl md:text-2xl font-medium text-blue-700">{onTimeRate}%</p>
           <p className="text-[11px] text-blue-400 mt-1">stories delivered</p>
         </div>
-        <div className="bg-amber-50 rounded-xl p-4">
+        <div className="bg-amber-50 rounded-xl p-3 md:p-4">
           <p className="text-[11px] text-amber-500 uppercase tracking-wider mb-1">On going</p>
-          <p className="text-2xl font-medium text-amber-700">
+          <p className="text-xl md:text-2xl font-medium text-amber-700">
             {filtered.reduce((sum: number, m: MemberScore) => sum + m.ongoingStories, 0)}
           </p>
           <p className="text-[11px] text-amber-400 mt-1">active stories</p>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-xl p-5 mb-4">
+      {/* Chart */}
+      <div className="bg-white border border-gray-100 rounded-xl p-4 md:p-5 mb-4">
         <p className="text-xs font-medium text-gray-500 mb-4">Score comparison</p>
         <ScoringChart scores={filtered} />
       </div>
 
-      <div className="space-y-3">
+      {/* Member cards */}
+      <div className="space-y-3 pl-3 md:pl-4">
         {filtered.map((member: MemberScore, index: number) => (
           <div key={member.id} className="relative">
-            <div className={`absolute -left-2 top-4 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold z-10
+            {/* Rank badge */}
+            <div className={`absolute -left-3 md:-left-4 top-3.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold z-10
               ${index === 0 ? 'bg-amber-400 text-white' :
                 index === 1 ? 'bg-gray-300 text-gray-600' :
                 index === 2 ? 'bg-amber-700 text-white' :
@@ -346,6 +395,12 @@ export default function ScoringPage() {
             <MemberCard member={member} />
           </div>
         ))}
+
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-gray-400 text-sm">
+            No scoring data for this range
+          </div>
+        )}
       </div>
     </div>
   )

@@ -28,6 +28,7 @@ interface SelectedMember {
 }
 
 export default function DashboardPage() {
+  const [showDone, setShowDone] = useState(true) 
   const [dateRange, setDateRange] = useState<DateRange>(DEFAULT_RANGE)
   const [selectedMember, setSelectedMember] = useState<SelectedMember | null>(null)
 
@@ -126,6 +127,127 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Done Stories List */}
+<div className="bg-white border border-gray-100 rounded-xl p-4 mb-4">
+  <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center gap-2">
+      <p className="text-xs font-medium text-gray-500">Done stories</p>
+      <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-medium">
+        {summary.done}
+      </span>
+    </div>
+    <button
+      onClick={() => setShowDone(prev => !prev)}
+      className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+    >
+      {showDone ? 'Hide' : 'Show all'}
+    </button>
+  </div>
+
+  {showDone && (
+    <div className="space-y-1.5">
+      {stories
+        .filter(s => s.is_closed)
+        .sort((a, b) => {
+          // Sort by finish_date terbaru dulu
+          if (!a.finish_date) return 1
+          if (!b.finish_date) return -1
+          return new Date(b.finish_date).getTime() - new Date(a.finish_date).getTime()
+        })
+        .map(s => {
+          const assignedNames = memberSummary
+            .filter(m =>
+              ((s as any).assigned_users?.length
+                ? (s as any).assigned_users
+                : s.assigned_to ? [s.assigned_to] : []
+              ).includes(m.id)
+            )
+            .map(m => m.full_name.split(' ')[0])
+
+          return (
+            <div
+              key={s.id}
+              className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 transition-all group"
+            >
+              <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                {/* Done checkmark */}
+                <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                    <path d="M1 4L3 6L7 2" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                {/* Ref + Subject */}
+                <span className="text-[11px] text-gray-400 flex-shrink-0">#{s.ref}</span>
+                <span className="text-xs text-gray-600 truncate">{s.subject}</span>
+              </div>
+
+              <div className="flex items-center gap-3 ml-3 flex-shrink-0">
+                {/* Assigned members */}
+                {assignedNames.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {assignedNames.slice(0, 2).map((name, i) => (
+                      <span key={i} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-500 rounded font-medium">
+                        {name}
+                      </span>
+                    ))}
+                    {assignedNames.length > 2 && (
+                      <span className="text-[10px] text-gray-400">+{assignedNames.length - 2}</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Points */}
+                {s.total_points !== null && (
+                  <span className="text-[10px] text-gray-400">{s.total_points} pts</span>
+                )}
+
+                {/* Finish date */}
+                {s.finish_date && (
+                  <span className="text-[10px] text-gray-400">
+                    {new Date(s.finish_date).toLocaleDateString('id-ID', {
+                      day: 'numeric', month: 'short'
+                    })}
+                  </span>
+                )}
+
+                {/* Status badge */}
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 text-emerald-600">
+                  {s.status_extra_info?.name}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+
+      {stories.filter(s => s.is_closed).length === 0 && (
+        <p className="text-xs text-gray-400 text-center py-4">
+          Belum ada story yang done dalam range ini
+        </p>
+      )}
+    </div>
+  )}
+
+  {/* Collapsed preview — tampil saat hidden */}
+  {!showDone && stories.filter(s => s.is_closed).length > 0 && (
+    <div className="flex items-center gap-2">
+      {stories
+        .filter(s => s.is_closed)
+        .slice(0, 3)
+        .map(s => (
+          <span key={s.id} className="text-[11px] text-gray-400 truncate max-w-32">
+            #{s.ref} {s.subject.split(']').pop()?.trim() || s.subject}
+          </span>
+        ))
+      }
+      {stories.filter(s => s.is_closed).length > 3 && (
+        <span className="text-[11px] text-gray-400">
+          +{stories.filter(s => s.is_closed).length - 3} more
+        </span>
+      )}
+    </div>
+  )}
+</div>
+
       {/* Charts */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="bg-white border border-gray-100 rounded-xl p-4">
@@ -155,7 +277,7 @@ export default function DashboardPage() {
         <MemberDetailModal
           memberId={selectedMember.id}
           memberName={selectedMember.full_name}
-          memberUsername={selectedMember.username}
+          memberRolename={selectedMember.username}
           roleLabel={selectedMember.role_name}
           stories={allStories}
           onClose={() => setSelectedMember(null)}

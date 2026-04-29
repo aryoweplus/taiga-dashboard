@@ -57,7 +57,7 @@ export default function Sidebar() {
         <span className="text-[10px] tracking-widest text-white/20 px-2 pt-2 pb-1 uppercase">
           Overview
         </span>
-        {navItems.slice(0, 2).map(({ href, label, icon: Icon }) => (
+        {navItems.slice(0, 3).map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -75,7 +75,7 @@ export default function Sidebar() {
         <span className="text-[10px] tracking-widest text-white/20 px-2 pt-4 pb-1 uppercase">
           Config
         </span>
-        {navItems.slice(2).map(({ href, label, icon: Icon }) => (
+        {navItems.slice(3).map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}

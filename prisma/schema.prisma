@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DIRECT_URL")
 }
 
 // Konfigurasi koneksi Taiga per project
@@ -17,31 +17,28 @@ model TaigaConnection {
   updatedAt   DateTime @updatedAt
 }
 
-// Mapping role tim (QA/DEV/PM)
 model TeamMember {
-  id           Int      @id @default(autoincrement())
-  taigaUserId  Int      @unique
-  fullName     String
-  username     String
-  role         String   // "DEV" | "QA" | "PM"
-  color        String   @default("#1a56db")
-  projectId    String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  taigaUserId Int      @unique
+  fullName    String
+  username    String
+  role        String
+  color       String   @default("#1a56db")
+  projectId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-// Konfigurasi widget dashboard (show/hide, posisi, tipe chart)
 model WidgetConfig {
   id        Int      @id @default(autoincrement())
-  widgetKey String   @unique  // "summary_cards", "status_chart", dll
+  widgetKey String   @unique
   visible   Boolean  @default(true)
   position  Int      @default(0)
-  chartType String   @default("bar")  // "bar" | "pie" | "line" | "donut"
+  chartType String   @default("bar")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// Snapshot sprint untuk trend chart
 model SprintSnapshot {
   id           Int      @id @default(autoincrement())
   projectId    String

@@ -12,10 +12,14 @@ interface TeamMember {
 }
 
 interface TaigaMemberRaw {
+  id: number
   user: number
   full_name: string
-  username: string
   role_name: string
+  color: string
+  photo: string | null
+  is_admin: boolean
+  is_owner: boolean
 }
 
 const ROLES = ['DEV', 'QA', 'PM']
@@ -77,7 +81,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           taigaUserId: member.user,
           fullName: member.full_name,
-          username: member.username,
+          username: member.role_name,
           role: savedRoles[member.user] || 'DEV',
           projectId: PROJECT_ID,
         }),
@@ -102,7 +106,7 @@ export default function SettingsPage() {
             body: JSON.stringify({
               taigaUserId: m.user,
               fullName: m.full_name,
-              username: m.username,
+              username: m.role_name,
               role: savedRoles[m.user] || 'DEV',
               projectId: PROJECT_ID,
             }),
@@ -239,8 +243,8 @@ export default function SettingsPage() {
                     {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-700">{m.full_name}</p>
-                    <p className="text-[11px] text-gray-400">@{m.username}</p>
+<p className="text-xs font-medium text-gray-700">{m.full_name}</p>
+<p className="text-[11px] text-gray-400">{m.role_name}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

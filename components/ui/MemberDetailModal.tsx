@@ -7,7 +7,7 @@ import { TaigaUserStory } from '@/types/taiga'
 interface Props {
   memberId: number
   memberName: string
-  memberUsername: string
+  memberRolename: string
   roleLabel: string
   stories: TaigaUserStory[]
   onClose: () => void
@@ -33,7 +33,8 @@ const roleStyle: Record<string, string> = {
 export default function MemberDetailModal({
   memberId,
   memberName,
-  memberUsername,
+  // memberUsername,
+  memberRolename,
   roleLabel,
   stories,
   onClose,
@@ -100,7 +101,7 @@ export default function MemberDetailModal({
                   {roleLabel}
                 </span>
               </div>
-              <p className="text-xs text-gray-400">@{memberUsername}</p>
+              <p className="text-xs text-gray-400">@{memberRolename}</p>
             </div>
           </div>
           <button

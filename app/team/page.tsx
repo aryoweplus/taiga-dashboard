@@ -118,7 +118,7 @@ export default function TeamPage() {
                       <p className="text-xs text-gray-700 group-hover:text-blue-600 transition-colors group-hover:underline underline-offset-2">
                         {m.full_name}
                       </p>
-                      <p className="text-[11px] text-gray-400">@{m.username}</p>
+                      <p className="text-[11px] text-gray-400">{m.role_name}</p>
                     </div>
                   </button>
                 </td>
@@ -152,7 +152,7 @@ export default function TeamPage() {
   <MemberDetailModal
     memberId={selectedMember.id}
     memberName={selectedMember.full_name}
-    memberUsername={selectedMember.username}
+    memberRolename={selectedMember.role_name}
     roleLabel={selectedMember.role_name}
     stories={stories}
     onClose={() => setSelectedMember(null)}

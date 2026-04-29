@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 import Sidebar from '@/components/layout/Sidebar'
 
 const inter = Inter({ subsets: ['latin'] })
 
+
 export const metadata: Metadata = {
-  title: 'Taiga Dashboard',
+  title: 'IT Taiga Dashboard',
   description: 'QA/DEV Team Progress Dashboard',
 }
 

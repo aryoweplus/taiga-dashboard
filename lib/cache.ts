@@ -7,10 +7,10 @@ const redis = new Redis({
 
 // TTL dalam detik
 const TTL = {
-  stats: 5 * 60,        // 5 menit
-  members: 30 * 60,     // 30 menit (jarang berubah)
-  milestones: 15 * 60,  // 15 menit
-  userstories: 5 * 60,  // 5 menit
+  stats:       5 * 60,   // 5 menit
+  members:     60 * 60,  // 1 jam
+  milestones:  30 * 60,  // 30 menit
+  userstories: 10 * 60,  // 10 menit (naikkan dari 5)
 }
 
 export async function getCached<T>(
@@ -41,10 +41,11 @@ export async function getCached<T>(
   }
 }
 
-export async function invalidateCache(pattern: string) {
-  const keys = await redis.keys(pattern)
-  if (keys.length > 0) {
-    await redis.del(...keys)
-    console.log(`[Cache] Invalidated ${keys.length} keys matching: ${pattern}`)
+export async function invalidateCache(key: string) {
+  try {
+    await redis.del(key)
+    console.log(`[Cache] Deleted: ${key}`)
+  } catch (error) {
+    console.warn(`[Cache] Failed to delete: ${key}`, error)
   }
 }

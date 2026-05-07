@@ -1,8 +1,14 @@
-import useSWR from 'swr'
+import useSWR, { mutate } from 'swr'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 const PROJECT_ID = '2'
+
+export async function syncAndRefresh() {
+  await fetch('/api/cron/sync')
+  // Invalidate semua SWR cache
+  await mutate(() => true, undefined, { revalidate: true })
+}
 
 export function useStats() {
   const { data, error, isLoading, mutate } = useSWR(
@@ -80,4 +86,6 @@ export function useScoring() {
     isLoading,
     mutate
   }
+
+  
 }

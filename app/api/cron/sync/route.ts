@@ -72,11 +72,12 @@ export async function GET(req: NextRequest) {
 
     // 6. Invalidate Redis cache
     await Promise.all([
-      invalidateCache(`stats:${PROJECT_ID}`),
-      invalidateCache(`userstories:${PROJECT_ID}`),
-      invalidateCache(`milestones:${PROJECT_ID}`),
-      milestoneId ? invalidateCache(`userstories:${PROJECT_ID}:${milestoneId}`) : Promise.resolve(),
-    ])
+  invalidateCache(`stats:${PROJECT_ID}`),
+  invalidateCache(`members:${PROJECT_ID}`),
+  invalidateCache(`milestones:${PROJECT_ID}`),
+  invalidateCache(`userstories:${PROJECT_ID}`),
+  invalidateCache(`tasks:${PROJECT_ID}`),
+])
 
     console.log(`[Cron] Cache invalidated`)
 

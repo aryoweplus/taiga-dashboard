@@ -17,11 +17,14 @@ const statusStyle: Record<string, string> = {
   'New':              'bg-gray-100 text-gray-500',
   'Ready':            'bg-blue-50 text-blue-500',
   'In Progress':      'bg-indigo-50 text-indigo-600',
+  'In progress':      'bg-indigo-50 text-indigo-600',  // ← lowercase variant
   'Hold':             'bg-orange-50 text-orange-500',
   'Ready For Test':   'bg-purple-50 text-purple-600',
+  'Ready for test':   'bg-purple-50 text-purple-600',  // ← lowercase variant
   'Testing':          'bg-violet-50 text-violet-600',
   'Ready to Release': 'bg-cyan-50 text-cyan-600',
   'Done':             'bg-emerald-50 text-emerald-600',
+  'Archived':         'bg-gray-100 text-gray-400',
 }
 
 const roleStyle: Record<string, string> = {

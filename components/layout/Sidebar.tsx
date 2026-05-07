@@ -13,6 +13,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { useState } from 'react'
+import { syncAndRefresh } from '@/lib/hooks'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,19 +30,17 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
 
   async function handleSync() {
-    setSyncing(true)
-    try {
-      const res = await fetch('/api/cron/sync')
-      const data = await res.json()
-      if (data.success) {
-        setLastSync(new Date().toLocaleTimeString('id-ID'))
-      }
-    } catch (e) {
-      console.error('Sync failed', e)
-    } finally {
-      setSyncing(false)
-    }
+  setSyncing(true)
+  try {
+    await syncAndRefresh()
+    setLastSync(new Date().toLocaleTimeString('id-ID'))
+    window.location.reload()
+  } catch (e) {
+    console.error('Sync failed', e)
+  } finally {
+    setSyncing(false)
   }
+}
 
   return (
     <aside className={`${collapsed ? 'w-14 min-w-14' : 'w-52 min-w-52'} bg-[#0f1923] flex flex-col transition-all duration-200`}>

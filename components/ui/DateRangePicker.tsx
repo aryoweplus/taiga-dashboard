@@ -11,6 +11,11 @@ export interface DateRange {
 
 const SPRINT_PRESETS: DateRange[] = [
   {
+    label: 'Semua waktu',
+    start: '',
+    end: '',
+  },
+  {
     label: 'Sprint current (27 Apr – 17 Mei)',
     start: '2026-04-27',
     end: '2026-05-17',
@@ -24,11 +29,6 @@ const SPRINT_PRESETS: DateRange[] = [
     label: '30 hari terakhir',
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
-  },
-  {
-    label: 'Semua waktu',
-    start: '',
-    end: '',
   },
 ]
 

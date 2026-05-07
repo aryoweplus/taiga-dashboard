@@ -28,12 +28,12 @@ export interface TaigaUserStory {
   milestone: number | null
   milestone_slug: string | null
   milestone_name: string | null
-  is_closed: boolean          
+  is_closed: boolean
   is_blocked: boolean
   total_points: number | null
-  kanban_order: number         
-  swimlane: number | null      
-  due_date: string | null       
+  kanban_order: number
+  swimlane: number | null
+  due_date: string | null
   finish_date: string | null
 }
 
